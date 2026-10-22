@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Smaldorn Hearth</title>
+<title>The Rested Axe</title>
 <meta name="description" content="Pull up a stool at Vurbag Smaldorn's tavern and wait out the countdown to World of Warcraft: Forever.">
-<meta property="og:title" content="The Smaldorn Hearth · Countdown to WoW Forever">
+<meta property="og:title" content="The Rested Axe · Countdown to WoW Forever">
 <meta property="og:description" content="The realms open 4 November 2026, 15:00 PST. Pull up a stool, the fire's going.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍺</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -134,7 +134,7 @@
 <canvas id="scene" aria-hidden="true"></canvas>
 
 <header class="sign" aria-live="polite">
-  <p class="tavern">The Smaldorn Hearth</p>
+  <p class="tavern">The Rested Axe</p>
   <p class="lead" id="lead">The realms of WoW Forever open in</p>
   <div class="clock">
     <div class="unit"><span class="num" id="d">--</span><span class="label">Days</span></div>
@@ -151,7 +151,7 @@
 <div id="painting"><div id="player"></div><button class="play" id="play">▶ Play the tavern lofi</button></div>
 
 <div id="gate" role="dialog" aria-label="Enter the tavern">
-  <h1>The Smaldorn Hearth</h1>
+  <h1>The Rested Axe</h1>
   <p>Innkeeper Vurbag Smaldorn has the fire going.</p>
   <p class="fine">A fan page. Not affiliated with Blizzard Entertainment.</p>
   <button class="door" id="enter">Push open the door</button>
@@ -179,7 +179,7 @@ function tick() {
     live = true;
     document.body.classList.add("is-live");
     $("lead").textContent = "The realms are open!";
-    document.title = "The realms are open · The Smaldorn Hearth";
+    document.title = "The realms are open · The Rested Axe";
     return;
   }
   const t = Math.floor(ms / 1000);
