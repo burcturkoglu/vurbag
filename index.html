@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Rested Axe</title>
+<meta name="description" content="Pull up a stool at Vurbag Smaldorn's tavern and wait out the countdown to World of Warcraft: Forever.">
+<meta property="og:title" content="The Rested Axe · Countdown to WoW Forever">
+<meta property="og:description" content="The realms open 4 November 2026, 15:00 PST. Pull up a stool, the fire's going.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍺</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --night: #0c0806;
+    --wood-dark: #2a170d;
+    --wood: #4a2c18;
+    --wood-hi: #7a4b2b;
+    --gold: #e6b04a;
+    --gold-hi: #ffd98a;
+    --chalk: #efe6d6;
+    --muted: #b8a58e;
+    --name: #5aa9ff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    background: var(--night);
+    color: var(--chalk);
+    font-family: "Pixelify Sans", ui-monospace, monospace;
+  }
+  #scene {
+    position: fixed; left: 0; top: 0;
+    image-rendering: pixelated; image-rendering: crisp-edges;
+  }
+
+  /* Hanging tavern sign with the countdown */
+  .sign {
+    position: fixed; z-index: 2;
+    top: 14px; left: 50%; transform: translateX(-50%);
+    width: min(calc(100vw - 32px), 520px);
+    padding: 12px 18px 14px;
+    text-align: center;
+    background:
+      repeating-linear-gradient(180deg, rgba(0,0,0,0) 0 22px, rgba(0,0,0,.35) 22px 24px),
+      linear-gradient(180deg, #5a3720, #43291a);
+    border: 4px solid var(--wood-dark);
+    box-shadow: inset 0 0 0 2px #6b4226, 0 8px 0 rgba(0,0,0,.45), 0 0 60px rgba(255,140,50,.12);
+    image-rendering: pixelated;
+  }
+  .sign::before, .sign::after {
+    content: ""; position: absolute; top: -18px; width: 4px; height: 14px;
+    background: repeating-linear-gradient(180deg, #8a8f99 0 4px, #4a4f59 4px 6px);
+  }
+  .sign::before { left: 18%; }
+  .sign::after { right: 18%; }
+  .tavern {
+    margin: 0; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    font-size: clamp(1rem, 4.4vw, 1.5rem);
+    color: var(--gold-hi); text-shadow: 2px 2px 0 #1a0d06;
+  }
+  .lead { margin: 6px 0 8px; font-size: clamp(.85rem, 3.2vw, 1.05rem); color: var(--muted); }
+  .clock { display: flex; justify-content: center; gap: clamp(6px, 2.4vw, 16px); }
+  .unit { min-width: clamp(54px, 15vw, 84px); }
+  .num {
+    display: block; font-weight: 700; line-height: 1;
+    font-size: clamp(1.8rem, 8.5vw, 3.2rem);
+    font-variant-numeric: tabular-nums;
+    color: var(--chalk); text-shadow: 3px 3px 0 #1a0d06;
+  }
+  .label { display: block; margin-top: 4px; font-size: clamp(.6rem, 2.4vw, .75rem); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .when { margin: 10px 0 0; font-size: clamp(.75rem, 2.8vw, .9rem); color: var(--muted); }
+  .cheer { display: none; font-weight: 700; font-size: clamp(1.6rem, 7vw, 2.6rem); color: var(--gold-hi); text-shadow: 3px 3px 0 #1a0d06; }
+  body.is-live .clock, body.is-live .when { display: none; }
+  body.is-live .cheer { display: block; }
+
+  /* WoW-style nameplate over the innkeeper */
+  #nameplate {
+    position: fixed; z-index: 1; transform: translate(-50%, -100%);
+    text-align: center; pointer-events: none; white-space: nowrap;
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+    line-height: 1.15;
+  }
+  #nameplate .nm { display: block; color: var(--name); font-weight: 600; font-size: 14px; }
+  #nameplate .tt { display: block; color: #d8d0c0; font-size: 12px; }
+
+  /* The music: a framed painting on the wall. YouTube needs the player visible and at least 200px tall. */
+  #painting {
+    position: fixed; z-index: 1;
+    background: #000 url("https://i.ytimg.com/vi/-uxi6_5cFqw/hqdefault.jpg") center / cover no-repeat;
+    outline: 6px solid #5a3720;
+    box-shadow: 0 0 0 10px var(--wood-dark), 0 0 0 12px #6b4226, 0 10px 24px rgba(0,0,0,.6);
+  }
+  #painting iframe { width: 100%; height: 100%; display: block; border: 0; }
+  #painting .play {
+    position: absolute; inset: 0; margin: auto; width: max-content; height: max-content;
+    font: inherit; font-weight: 600; font-size: 1rem; cursor: pointer;
+    color: var(--night); background: var(--gold); border: 0; padding: 10px 16px;
+    box-shadow: 0 0 0 3px var(--wood-dark), 4px 4px 0 3px rgba(0,0,0,.5);
+  }
+  body.music-on #painting .play { display: none; }
+
+  /* Front door. Browsers block autoplay with sound, so one click starts the music. */
+  #gate {
+    position: fixed; inset: 0; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    padding: 16px; text-align: center;
+    background: radial-gradient(ellipse at 50% 60%, rgba(60,30,12,.85), rgba(6,4,3,.97) 70%);
+    transition: opacity .8s ease;
+  }
+  #gate.hidden { opacity: 0; pointer-events: none; }
+  #gate h1 { margin: 0; font-size: clamp(1.8rem, 8vw, 3.4rem); color: var(--gold-hi); letter-spacing: .08em; text-shadow: 4px 4px 0 #1a0d06; }
+  #gate p { margin: 0; color: var(--muted); font-size: clamp(.9rem, 3.4vw, 1.1rem); }
+  .door {
+    font: inherit; font-weight: 700; font-size: clamp(1rem, 4vw, 1.3rem); letter-spacing: .06em;
+    color: var(--night); cursor: pointer; margin-top: 10px;
+    padding: 16px 28px; border: 0;
+    background: linear-gradient(180deg, var(--gold-hi), var(--gold));
+    box-shadow: 0 0 0 4px var(--wood-dark), 6px 6px 0 4px rgba(0,0,0,.6), 0 0 50px rgba(255,140,50,.35);
+  }
+  .door:hover, .door:focus-visible { transform: translate(-1px, -2px); outline: none; }
+  #gate .fine { position: absolute; bottom: 12px; font-size: 11px; opacity: .6; }
+  .quiet { font: inherit; background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; }
+
+  footer {
+    position: fixed; z-index: 1; right: 10px; bottom: 6px;
+    font-size: 11px; color: rgba(216,208,192,.45);
+  }
+  @media (max-width: 600px) { footer { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<header class="sign" aria-live="polite">
+  <p class="tavern">The Rested Axe</p>
+  <p class="lead" id="lead">The realms of WoW Forever open in</p>
+  <div class="clock">
+    <div class="unit"><span class="num" id="d">--</span><span class="label">Days</span></div>
+    <div class="unit"><span class="num" id="h">--</span><span class="label">Hours</span></div>
+    <div class="unit"><span class="num" id="m">--</span><span class="label">Mins</span></div>
+    <div class="unit"><span class="num" id="s">--</span><span class="label">Secs</span></div>
+  </div>
+  <div class="cheer">For Khaz Modan!</div>
+  <p class="when" id="local-time">4 November 2026, 15:00 PST</p>
+</header>
+
+<div id="nameplate"><span class="nm">Vurbag Smaldorn</span><span class="tt">&lt;Innkeeper&gt;</span></div>
+
+<div id="painting"><div id="player"></div><button class="play" id="play">▶ Play the tavern lofi</button></div>
+
+<div id="gate" role="dialog" aria-label="Enter the tavern">
+  <h1>The Rested Axe</h1>
+  <p>Innkeeper Vurbag Smaldorn has the fire going.</p>
+  <p class="fine">A fan page. Not affiliated with Blizzard Entertainment.</p>
+  <button class="door" id="enter">Push open the door</button>
+  <button class="quiet" id="silent">Slip in quietly (no music)</button>
+</div>
+
+<footer>A fan page. World of Warcraft is a trademark of Blizzard Entertainment. Not affiliated with Blizzard.</footer>
+
+<script>
+/* ---------- Countdown ---------- */
+// Official launch: 4 Nov 2026, 15:00 PST (UTC-8) = 23:00 UTC = 00:00 CET on 5 Nov.
+// Source: https://news.blizzard.com/en-us/article/24302093/
+const LAUNCH = new Date("2026-11-04T23:00:00Z");
+const VIDEO_ID = "-uxi6_5cFqw";
+const $ = id => document.getElementById(id);
+const pad = n => String(n).padStart(2, "0");
+let live = false;
+
+$("local-time").textContent = "Launch: " + LAUNCH.toLocaleString(undefined, {
+  weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZoneName: "short"
+});
+function tick() {
+  const ms = LAUNCH - Date.now();
+  if (ms <= 0) {
+    live = true;
+    document.body.classList.add("is-live");
+    $("lead").textContent = "The realms are open!";
+    document.title = "The realms are open · The Rested Axe";
+    return;
+  }
+  const t = Math.floor(ms / 1000);
+  $("d").textContent = Math.floor(t / 86400);
+  $("h").textContent = pad(Math.floor(t / 3600) % 24);
+  $("m").textContent = pad(Math.floor(t / 60) % 60);
+  $("s").textContent = pad(t % 60);
+  setTimeout(tick, 1000 - (Date.now() % 1000));
+}
+tick();
+
+/* ---------- Music ---------- */
+function startMusic() {
+  if (document.body.classList.contains("music-on")) return;
+  document.body.classList.add("music-on");
+  const make = () => new YT.Player("player", {
+    videoId: VIDEO_ID, width: "100%", height: "100%",
+    playerVars: { autoplay: 1, loop: 1, playlist: VIDEO_ID, rel: 0, playsinline: 1 },
+    events: { onReady: e => { e.target.setVolume(60); e.target.playVideo(); } }
+  });
+  if (window.YT && YT.Player) return make();
+  window.onYouTubeIframeAPIReady = make;
+  const s = document.createElement("script");
+  s.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(s);
+}
+function enter(withMusic) {
+  $("gate").classList.add("hidden");
+  if (withMusic) startMusic();
+}
+$("enter").addEventListener("click", () => enter(true));
+$("silent").addEventListener("click", () => enter(false));
+$("play").addEventListener("click", startMusic);
+$("enter").focus();
+
+/* ---------- Tavern scene (pixel art, drawn at low resolution and scaled up) ---------- */
+const cv = $("scene"), ctx = cv.getContext("2d");
+let S, W, H, L = {};
+
+const C = {
+  plankA: "#3b2416", plankB: "#432a19", seam: "#24140b", beam: "#1e1009",
+  stone: "#4f4a45", stoneHi: "#615b55", mortar: "#36322f",
+  floorA: "#2c1b10", floorB: "#33200f", floorSeam: "#1c1008",
+  hearth: "#120a06", logA: "#3a2212", logB: "#5a3720",
+  barTop: "#7a4b2b", barTopHi: "#9a6238", barFront: "#4a2c18", barPanel: "#3a2212", brass: "#b9852f",
+  tableTop: "#8a5a34", tableEdge: "#5e3a20", tableLeg: "#4a2c18",
+  wax: "#e8dcc0", rug: "#6b2a1e", rugHi: "#a8742a",
+};
+
+// Seeded random so stones and bottles don't move around between frames.
+function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+
+const SPR = {
+  dwarf: { rows: [
+    "..h.MMMMMM.h..",
+    "..hMMMMMMMMh..",
+    "...MMMMMMMM...",
+    "...ssssssss...",
+    "...ssEssEss...",
+    "...sssNNsss...",
+    "..bbbbbbbbbb..",
+    "..bbbbbbbbbb..",
+    ".aabbbbbbbbaa.",
+    "aaaabbbbbbaaaa",
+    "aaaaabbbbaaaaa",
+    "aaawwwbbwwwaaa",
+    "aaawwwwwwwwaaa",
+  ], map: { h: "#e8dcc0", M: "#8a8f99", s: "#e0a77d", E: "#1a1a1a", N: "#c4885e", b: "#b5562a", a: "#3e5a8a", w: "#c9b79a" } },
+  rogue: { head: [
+    "..ggggg..",
+    ".ggggggg.",
+    ".gsssssg.",
+    ".gsEsEsg.",
+    ".ggsssgg.",
+    "..ggggg..",
+  ], body: [
+    ".ccccccc.",
+    "ccccccccc",
+    "cccbbbccc",
+    "ccccccccc",
+    "ccccccccc",
+  ], map: { g: "#3d5a34", c: "#2f4628", s: "#d9a07a", E: "#1a1a1a", b: "#6b4a2a" } },
+  elf: { head: [
+    "...yyyyy...",
+    "s.yyyyyyy.s",
+    ".sysssssys.",
+    "..ysEsEsy..",
+    "..yysssyy..",
+    "...yyyyy...",
+  ], body: [
+    "..ppppppp..",
+    ".ppppppppp.",
+    ".ppptttppp.",
+    ".ppppppppp.",
+    ".ppppppppp.",
+  ], map: { y: "#e8d27a", s: "#f1c9a5", E: "#1a1a1a", p: "#5a3a8a", t: "#d9a441" } },
+  gnome: { head: [
+    ".k.k.k.",
+    "kkkkkkk",
+    "soosoos",
+    "sssssss",
+    ".sssss.",
+  ], body: [
+    ".vvvvv.",
+    "vvvvvvv",
+    "vvvvvvv",
+    "vvvvvvv",
+  ], map: { k: "#ff6fb5", o: "#8fd3ff", s: "#f1c9a5", v: "#4a8a5a" } },
+  knight: { head: [
+    "..hhhhh..",
+    ".hhhhhhh.",
+    ".hsssssh.",
+    ".sEsssEs.",
+    ".sssssss.",
+    "..sssss..",
+  ], body: [
+    ".mBBBBBm.",
+    "mmBBBBBmm",
+    "mmBBGBBmm",
+    "mmBBBBBmm",
+    "mmBBBBBmm",
+  ], map: { h: "#6b4226", s: "#e0b08a", E: "#1a1a1a", m: "#8a8f99", B: "#2b4f9e", G: "#d9a441" } },
+  mug: { rows: ["fff.", "mmmh", "mmmh", "mmm."], map: { f: "#f2ead8", m: "#b9852f", h: "#8a5a1c" } },
+  shield: { rows: [
+    "..MMMM..",
+    ".MrrrrM.",
+    "MrrGGrrM",
+    "MrGrrGrM",
+    "MrrGGrrM",
+    ".MrrrrM.",
+    "..MrrM..",
+    "...MM...",
+  ], map: { M: "#8a8f99", r: "#8a2a1e", G: "#d9a441" } },
+  cat: { rows: [
+    ".d.d....",
+    ".cccc...",
+    "ccccccc.",
+    "cccccccc",
+    ".ccccccd",
+  ], map: { c: "#5a5a66", d: "#3a3a44" } },
+};
+
+function px(x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(x | 0, y | 0, w, h); }
+function sprite(rows, map, x, y) {
+  for (let r = 0; r < rows.length; r++) for (let c = 0; c < rows[r].length; c++) {
+    const ch = rows[r][c];
+    if (ch !== ".") px(x + c, y + r, 1, 1, map[ch]);
+  }
+}
+function glow(x, y, r, color, a) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, `rgba(${color},${a})`);
+  g.addColorStop(1, `rgba(${color},0)`);
+  ctx.fillStyle = g;
+  ctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+
+/* Fire: the classic "doom fire" heat simulation inside the hearth. */
+const FIRE_PAL = [null, "#3a0a05", "#5c1207", "#7d1b08", "#a32a0b", "#c43d0e", "#e05a14", "#f07a1c", "#f89a2a", "#fbb83e", "#fdd35c", "#ffe98a", "#fff6c8"];
+const MAXH = FIRE_PAL.length - 1;
+let fire = { w: 0, h: 0, heat: null };
+function stepFire() {
+  const { w, h, heat } = fire;
+  for (let x = 0; x < w; x++) {
+    const edge = x < 3 || x > w - 4;
+    heat[(h - 1) * w + x] = edge ? MAXH - 5 : (Math.random() < .85 ? MAXH : MAXH - 2);
+  }
+  for (let y = 1; y < h; y++) for (let x = 0; x < w; x++) {
+    const v = heat[y * w + x];
+    const r = (Math.random() * 3) | 0;
+    const dx = Math.min(w - 1, Math.max(0, x - r + 1));
+    heat[(y - 1) * w + dx] = Math.max(0, v - (Math.random() < .6 ? 1 : 0));
+  }
+}
+
+function layout() {
+  const vw = innerWidth, vh = innerHeight;
+  S = Math.max(2, Math.round(Math.min(vh / 160, vw / 95)));
+  W = Math.ceil(vw / S); H = Math.ceil(vh / S);
+  cv.width = W; cv.height = H;
+  cv.style.width = W * S + "px"; cv.style.height = H * S + "px";
+
+  const narrow = W < 150;
+  const fw = narrow ? 40 : 50, fh = narrow ? 54 : 62;
+  const fx = narrow ? 3 : Math.max(4, Math.round(W * .05));
+  const barW = Math.min(120, Math.max(40, Math.round(W * .32)));
+  const barX = W - barW;
+  let floorY = H - Math.max(34, Math.round(H * .22));
+
+  // Painting (the YouTube player): at least 200px tall, 16:9 where it fits.
+  const signBottom = document.querySelector(".sign").getBoundingClientRect().bottom;
+  const ph = Math.max(200, 50 * S), pw = Math.min(Math.round(ph * 16 / 9), vw - 32);
+  const gapL = fx + fw + 6, gapR = barX - 6;
+  let paintX, paintY, win = null;
+  if ((gapR - gapL) * S >= pw + 8 * S) {
+    // Wide: hang it on the wall between the fireplace and the bar.
+    paintX = ((gapL + gapR) / 2) * S - pw / 2;
+    paintY = Math.max(signBottom + 16, Math.min(signBottom + 28, (floorY - 22) * S - ph));
+    if (paintY + ph > (floorY - 18) * S) floorY = Math.min(H - 28, Math.ceil((paintY + ph) / S) + 20);
+    const room = paintX / S - gapL;
+    if (room >= 24) win = { x: gapL + Math.round((room - 18) / 2), y: floorY - 52, w: 18, h: 24 };
+  } else {
+    // Narrow: hang it under the sign and push the room down.
+    paintX = (vw - pw) / 2;
+    paintY = signBottom + 14;
+    floorY = Math.min(H - 28, Math.max(floorY, Math.ceil((paintY + ph + 10) / S) + fh));
+  }
+  const p = $("painting").style;
+  p.left = paintX + "px"; p.top = paintY + "px"; p.width = pw + "px"; p.height = ph + "px";
+
+  const fy = floorY - fh;
+  const ox = fx + 8, ow = fw - 16, oy = fy + 24, oh = floorY - oy;
+  const barTop = floorY - 18;
+  const dwarfX = barX + Math.round(barW * .4) - 7, dwarfY = barTop - 12;
+
+  const tableTop = H - 24;
+  const tables = W >= 220 ? [Math.round(W * .3), Math.round(W * .6)] : [Math.round(W * .5)];
+  const cast = [["rogue", "elf"], ["gnome", "knight"]];
+  const patrons = [];
+  tables.forEach((cx, i) => cast[i].forEach((name, j) => {
+    const sp = SPR[name], w = sp.head[0].length;
+    const x = j === 0 ? cx - 3 - w : cx + 3;
+    patrons.push({ name, x, w, phase: Math.random() * 6, nextRaise: 4 + Math.random() * 10, raiseT: -1, cx: x + (w >> 1) });
+  }));
+
+  const r = rng(7);
+  const bottles = [];
+  for (let x = barX + 3; x < W - 3; x += 4 + ((r() * 3) | 0))
+    bottles.push({ x, shelf: r() < .5 ? 0 : 1, c: ["#2f6b3a", "#6b2f2f", "#3a4f7a", "#c9a54a", "#7a3a6b"][(r() * 5) | 0], tall: r() < .5 });
+
+  L = { fx, fw, fh, fy, ox, ow, oy, oh, floorY, barX, barW, barTop, dwarfX, dwarfY, tableTop, tables, patrons, bottles, win,
+        lanterns: W >= 200 ? [W - 14] : [], seed: 11 };
+
+  fire.w = Math.max(8, ow - 4); fire.h = Math.min(26, oh - 4);
+  fire.heat = new Uint8Array(fire.w * fire.h);
+
+  const np = $("nameplate").style;
+  np.left = Math.min(vw - 70, Math.max(70, (dwarfX + 7) * S)) + "px";
+  np.top = (dwarfY - 2) * S + "px";
+}
+
+let steam = [], rain = [], zzz = [];
+function drawRoom(t) {
+  const { fx, fw, fh, fy, ox, ow, oy, oh, floorY, barX, barW, barTop, win } = L;
+  const r = rng(L.seed);
+
+  // Back wall: vertical planks, a top beam, stone wainscot.
+  for (let x = 0; x < W; x += 8) { px(x, 0, 8, floorY, (x / 8) % 2 ? C.plankA : C.plankB); px(x, 0, 1, floorY, C.seam); }
+  for (let y = 18; y < floorY - 16; y += 23 + ((r() * 9) | 0)) for (let x = 3; x < W; x += 8) if (r() < .25) px(x + 3, y, 1, 1, C.seam);
+  px(0, 0, W, 5, C.beam); px(0, 5, W, 1, C.seam);
+  const wy = floorY - 14;
+  px(0, wy, W, 14, C.stone);
+  for (let row = 0; row < 3; row++) for (let x = (row % 2) * 4 - 4; x < W; x += 8) {
+    px(x, wy + row * 5, 8, 1, C.mortar); px(x, wy + row * 5, 1, 5, C.mortar);
+    px(x + 1, wy + row * 5 + 1, 6, 1, C.stoneHi);
+  }
+
+  // Floor
+  for (let y = floorY, i = 0; y < H; y += 5, i++) {
+    px(0, y, W, 5, i % 2 ? C.floorA : C.floorB); px(0, y, W, 1, C.floorSeam);
+    for (let x = (i * 13) % 24; x < W; x += 24) px(x, y, 1, 5, C.floorSeam);
+  }
+
+  // Window with rain
+  if (win) {
+    px(win.x - 2, win.y - 2, win.w + 4, win.h + 4, C.beam);
+    px(win.x, win.y, win.w, win.h, "#142238");
+    px(win.x, win.y + win.h - 6, win.w, 6, "#1b2d4a");
+    if (rain.length < 14) rain.push({ x: (Math.random() * win.w) | 0, y: (Math.random() * win.h) | 0 });
+    for (const d of rain) {
+      d.y += 2; if (d.y > win.h) { d.y = -3; d.x = (Math.random() * win.w) | 0; }
+      for (let k = 0; k < 3; k++) if (d.y + k >= 0 && d.y + k < win.h) px(win.x + d.x, win.y + d.y + k, 1, 1, "#5e7aa6");
+    }
+    px(win.x + (win.w >> 1) - 1, win.y, 2, win.h, C.beam); px(win.x, win.y + (win.h >> 1) - 1, win.w, 2, C.beam);
+    px(win.x - 3, win.y + win.h + 2, win.w + 6, 2, C.barTop);
+  }
+
+  // Lanterns hanging from the beam
+  for (const lx of L.lanterns) {
+    px(lx, 6, 1, 8, "#4a4f59");
+    px(lx - 2, 14, 5, 7, C.beam);
+    px(lx - 1, 15, 3, 5, Math.sin(t * 7 + lx) > .3 ? "#ffd98a" : "#ffcc66");
+  }
+
+  // Fireplace: chimney, mantle, stone surround, hearth opening
+  const stoneBlock = (x0, y0, w, h) => {
+    px(x0, y0, w, h, C.stone);
+    for (let y = y0, row = 0; y < y0 + h; y += 4, row++) for (let x = x0 - (row % 2) * 3; x < x0 + w; x += 6) {
+      px(Math.max(x0, x), y, Math.min(6, x0 + w - Math.max(x0, x)), 1, C.mortar);
+      if (x >= x0) px(x, y, 1, Math.min(4, y0 + h - y), C.mortar);
+      if (x + 1 >= x0 && x + 4 < x0 + w) px(x + 1, y + 1, 3, 1, C.stoneHi);
+    }
+  };
+  stoneBlock(fx + 7, 0, fw - 14, fy + 14);
+  stoneBlock(fx, fy + 18, fw, fh - 18);
+  px(fx - 3, fy + 14, fw + 6, 4, "#5a3720"); px(fx - 3, fy + 14, fw + 6, 1, C.barTopHi);
+  sprite(SPR.shield.rows, SPR.shield.map, fx + (fw >> 1) - 4, fy + 2);
+  sprite(SPR.mug.rows, SPR.mug.map, fx + 2, fy + 10);
+  px(fx + fw - 5, fy + 9, 2, 5, C.wax); px(fx + fw - 5, fy + 7, 1, 2, Math.sin(t * 9) > 0 ? "#ffd98a" : "#ffb347");
+  px(ox, oy, ow, oh, C.hearth);
+  px(ox, oy, 2, 2, C.stone); px(ox + ow - 2, oy, 2, 2, C.stone); px(ox, oy, 1, 4, C.stone); px(ox + ow - 1, oy, 1, 4, C.stone);
+  // fire
+  const fx0 = ox + 2, fy0 = floorY - fire.h - 1;
+  for (let y = 0; y < fire.h; y++) for (let x = 0; x < fire.w; x++) {
+    const v = fire.heat[y * fire.w + x];
+    if (v) px(fx0 + x, fy0 + y, 1, 1, FIRE_PAL[v]);
+  }
+  px(ox + 3, floorY - 4, ow - 6, 3, C.logA); px(ox + 6, floorY - 6, ow - 12, 2, C.logB);
+  px(ox + 2, floorY - 1, ow - 4, 1, "#e05a14");
+  // rug + sleeping cat
+  px(fx + 2, floorY + 1, fw - 4, 5, C.rug); px(fx + 4, floorY + 3, fw - 8, 1, C.rugHi);
+  const catX = fx + (fw >> 1) - 4, catY = floorY;
+  sprite(SPR.cat.rows, SPR.cat.map, catX, catY);
+  if (Math.random() < .006 && zzz.length < 3) zzz.push({ x: catX + 6, y: catY - 1, life: 1 });
+
+  // Shelves and bottles behind the bar
+  for (const s of [0, 1]) {
+    const sy = barTop - 14 - s * 14;
+    px(barX + 1, sy, barW - 1, 2, C.barFront);
+    px(barX + 1, sy, barW - 1, 1, C.barTop);
+  }
+  for (const b of L.bottles) {
+    const sy = barTop - 14 - b.shelf * 14, h = b.tall ? 6 : 4;
+    px(b.x, sy - h, 2, h, b.c); px(b.x, sy - h - 2, 1, 2, b.c); px(b.x, sy - h + 1, 1, 1, "rgba(255,255,255,.35)");
+  }
+
+  // Vurbag behind the bar, polishing a mug
+  const d = SPR.dwarf;
+  sprite(d.rows, d.map, L.dwarfX, L.dwarfY);
+  // bar counter
+  px(barX - 2, barTop, barW + 2, floorY + 6 - barTop, C.barFront);
+  for (let x = barX + 6; x < W; x += 12) px(x, barTop + 5, 1, floorY - barTop - 2, C.barPanel);
+  px(barX - 3, barTop, barW + 3, 3, C.barTop); px(barX - 3, barTop, barW + 3, 1, C.barTopHi);
+  px(barX - 2, floorY + 3, barW + 2, 1, C.brass);
+  // hands, mug and rag
+  const rub = Math.round(Math.sin(t * 3) * 2);
+  sprite(SPR.mug.rows, SPR.mug.map, L.dwarfX + 1, barTop - 4);
+  px(L.dwarfX + 4, barTop - 2, 2, 2, d.map.s);
+  px(L.dwarfX + 9 + rub, barTop - 3, 3, 3, "#d8d0c0");
+  px(L.dwarfX + 10 + rub, barTop - 1, 2, 1, d.map.s);
+  // a keg at the end of the bar
+  if (barX - 14 > fx + fw + 4) {
+    const kx = barX - 13, ky = floorY - 9;
+    px(kx, ky, 9, 11, "#6b4226"); px(kx, ky + 2, 9, 1, "#3a3f49"); px(kx, ky + 8, 9, 1, "#3a3f49");
+    px(kx + 2, ky, 1, 11, "#5a3720"); px(kx + 6, ky, 1, 11, "#5a3720");
+  }
+
+  // Patrons at their tables
+  const beat = t / 0.8; // lofi head-nod, roughly 75 bpm
+  for (const p of L.patrons) {
+    const sp = SPR[p.name];
+    const bodyY = L.tableTop - sp.body.length + 2;
+    const bob = Math.sin((beat + p.phase) * Math.PI * 2) > .55 ? 1 : 0;
+    const headY = bodyY - sp.head.length + bob;
+    sprite(sp.body, sp.map, p.x, bodyY);
+    sprite(sp.head, sp.map, p.x, headY);
+    if (live && p.raiseT < 0 && Math.random() < .02) p.raiseT = t;
+    if (!live && p.raiseT < 0 && t > p.nextRaise) p.raiseT = t;
+    const raising = p.raiseT >= 0 && t - p.raiseT < 1.6;
+    if (p.raiseT >= 0 && !raising) { p.raiseT = -1; p.nextRaise = t + 8 + Math.random() * 12; }
+    const mx = p.cx + (p.x < (p.cx) ? 1 : 0) + 1;
+    if (raising) {
+      const my = live ? headY - 3 : headY + 2;
+      sprite(SPR.mug.rows, SPR.mug.map, mx, my);
+      px(mx - 1, my + 2, 1, 2, sp.map.s);
+    } else {
+      sprite(SPR.mug.rows, SPR.mug.map, mx, L.tableTop - 4);
+      if (Math.random() < .05) steam.push({ x: mx + 1, y: L.tableTop - 5, life: 1 });
+    }
+  }
+  for (const cx of L.tables) {
+    const tt = L.tableTop;
+    px(cx - 16, tt, 32, 2, C.tableTop); px(cx - 16, tt + 2, 32, 2, C.tableEdge);
+    px(cx - 2, tt + 4, 4, H - tt - 6, C.tableLeg); px(cx - 7, H - 2, 14, 2, "#3a2212");
+    px(cx - 1, tt - 4, 2, 4, C.wax);
+    px(cx - 1, tt - 6, 1, 2, Math.sin(t * 11 + cx) > 0 ? "#ffd98a" : "#ffb347");
+  }
+
+  // Steam and the cat's Zzz
+  steam = steam.filter(s => (s.life -= .03) > 0);
+  for (const s of steam) { s.y -= .25; ctx.globalAlpha = s.life * .7; px(s.x + Math.round(Math.sin(s.y * .6)), s.y, 1, 1, "#d8d0c8"); }
+  zzz = zzz.filter(z => (z.life -= .008) > 0);
+  for (const z of zzz) {
+    z.y -= .08; z.x += .03; ctx.globalAlpha = z.life;
+    px(z.x, z.y, 3, 1, "#d8d0c0"); px(z.x + 1, z.y + 1, 1, 1, "#d8d0c0"); px(z.x, z.y + 2, 3, 1, "#d8d0c0");
+  }
+  ctx.globalAlpha = 1;
+
+  // Light: warm firelight, lanterns, candles, then a vignette
+  ctx.globalCompositeOperation = "lighter";
+  const flick = Math.random() * .06 + Math.sin(t * 5) * .03;
+  glow(ox + ow / 2, floorY - 10, Math.max(W, H) * .55, "255,120,40", .2 + flick);
+  glow(ox + ow / 2, floorY - 8, 30, "255,170,70", .25 + flick);
+  for (const lx of L.lanterns) glow(lx, 17, 22, "255,190,90", .14 + flick / 2);
+  for (const cx of L.tables) glow(cx, L.tableTop - 6, 16, "255,180,80", .16 + flick / 2);
+  ctx.globalCompositeOperation = "source-over";
+  const v = ctx.createRadialGradient(W / 2, H * .55, Math.min(W, H) * .3, W / 2, H * .55, Math.max(W, H) * .8);
+  v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.6)");
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+}
+
+let last = 0, t0 = performance.now();
+function frame(now) {
+  if (now - last > 55) {
+    last = now;
+    stepFire();
+    drawRoom((now - t0) / 1000);
+  }
+  requestAnimationFrame(frame);
+}
+addEventListener("resize", () => { layout(); });
+document.fonts.ready.then(layout);
+layout();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
